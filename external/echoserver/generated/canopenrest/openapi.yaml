@@ -1,0 +1,199 @@
+openapi: 3.1.0
+info:
+  title: CanOpen REST Service
+  description: |-
+    REST Service for interacting with SDO objects and Update Service
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: "t.jaster@posteo.de"
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 0.1.0
+servers:
+  - url: https://cangateway.ll-tj-home/canopenrest/api/v1
+  - url: https://localhost/canopenrest/api/v1
+  - url: http://cangateway.ll-tj-home:8080/canopenrest/api/v1
+  - url: http://localhost:8080/canopenrest/api/v1
+paths:
+  /nmt:
+    get:
+      tags:
+        - nmt
+      summary: Reads nmt state from node
+      description: Reads nmt state from node
+      operationId: getNMT
+      parameters:
+        - name: node
+          in: query
+          description: Node to query
+          required: true
+          schema:
+            type: string
+            pattern: '^(0[x])?[A-F0-9]+$'
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: string
+        '400':
+          description: Invalid tag value
+    post:
+      tags:
+        - nmt
+      summary: Writes nmt state to node
+      description: Writes nmt state to node
+      operationId: postNMT
+      parameters:
+        - name: node
+          in: query
+          description: Node to query
+          required: true
+          schema:
+            type: string
+            pattern: '^(0[x])?[A-F0-9]+$'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid tag value
+  /sdo:
+    get:
+      tags:
+        - sdo
+      summary: Reads sdo data from node
+      description: Reads sdo data from node
+      operationId: getSDO
+      parameters:
+        - name: node
+          in: query
+          description: Node to query
+          required: true
+          schema:
+            type: string
+            pattern: '^(0[x])?[A-F0-9]+$'
+        - name: index
+          in: query
+          description: Index to query
+          required: true
+          schema:
+            type: string
+            pattern: '^(0[x])?[A-F0-9]+$'
+        - name: subindex
+          in: query
+          description: Subindex to query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            text/plain:
+              schema:
+                type: string
+        '400':
+          description: Invalid tag value
+    post:
+      tags:
+        - sdo
+      summary: Writes sdo data to node
+      description: Writes sdo data to node
+      operationId: postSDO
+      parameters:
+        - name: node
+          in: query
+          description: Node to query
+          required: true
+          schema:
+            type: string
+            pattern: '^(0[x])?[A-F0-9]+$'
+        - name: index
+          in: query
+          description: Index to query
+          required: true
+          schema:
+            type: string
+            pattern: '^(0[x])?[A-F0-9]+$'
+        - name: subindex
+          in: query
+          description: Subindex to query
+          required: false
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+          text/plain:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid input
+  /node:
+    post:
+      tags:
+        - node
+      summary: Creates node with eds
+      description: Creates node with eds
+      operationId: postNode
+      parameters:
+        - name: node
+          in: query
+          description: Node to query
+          required: true
+          schema:
+            type: string
+            pattern: '^(0[x])?[A-F0-9]+$'
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid input
+  /flash:
+    post:
+      tags:
+        - flash
+      summary: Flash updates node with binary
+      description: Flash updates node with binary
+      operationId: postFlash
+      parameters:
+        - name: node
+          in: query
+          description: Node to query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid input

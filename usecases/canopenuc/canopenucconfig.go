@@ -3,8 +3,8 @@ package canopenuc
 import (
 	can "github.com/angelodlfrtr/go-can"
 	transports "github.com/angelodlfrtr/go-can/transports"
-	canopen "github.com/angelodlfrtr/go-canopen"
 	"github.com/jaster-prj/canopenrest/external/persistence"
+	canopen "github.com/jormenjanssen/go-canopen"
 )
 
 type CanOpenUCConfig struct {

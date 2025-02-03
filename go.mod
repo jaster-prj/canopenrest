@@ -4,8 +4,8 @@ go 1.23.3
 
 require (
 	github.com/angelodlfrtr/go-can v0.0.4
-	github.com/angelodlfrtr/go-canopen v0.0.5
 	github.com/getkin/kin-openapi v0.128.0
+	github.com/jormenjanssen/go-canopen v0.0.13
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/oapi-codegen/echo-middleware v1.0.2
 	github.com/oapi-codegen/runtime v1.1.1
@@ -15,7 +15,7 @@ require (
 require (
 	github.com/angelodlfrtr/serial v0.0.0-20190912094943-d028474db63c // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
-	github.com/brutella/can v0.0.1 // indirect
+	github.com/brutella/can v0.0.2 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/google/uuid v1.5.0 // indirect

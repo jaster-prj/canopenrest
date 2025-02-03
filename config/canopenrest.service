@@ -1,0 +1,13 @@
+cat /etc/systemd/system/canopenrest.service
+
+[Unit]
+Description=CanOpenRest
+
+[Service]
+Environment="CANOPEN_STORAGE=/var/cache"
+ExecStart=/opt/canopenrest/service
+StandardOutput=append:/var/log/canopenrest.log
+StandardError=append:/var/log/canopenrest.log
+
+[Install]
+WantedBy=multi-user.target

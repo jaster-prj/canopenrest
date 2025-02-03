@@ -3,8 +3,8 @@ package canopenuc
 import (
 	"time"
 
-	canopen "github.com/angelodlfrtr/go-canopen"
 	"github.com/jaster-prj/canopenrest/external/persistence"
+	canopen "github.com/jormenjanssen/go-canopen"
 	"github.com/rs/zerolog/log"
 )
 

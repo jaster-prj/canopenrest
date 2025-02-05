@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/jaster-prj/canopenrest/external/persistence"
-	canopen "github.com/jormenjanssen/go-canopen"
+	canopen "github.com/jaster-prj/go-canopen"
 	"github.com/rs/zerolog/log"
 )
 
@@ -35,6 +35,16 @@ func (c *CanOpenUC) ReadNmt(id int) (*string, error) {
 	node, err := c.getNode(id)
 	if err != nil {
 		return nil, err
+	}
+	timestamp := node.NMTMaster.Timestamp
+	timeout := time.Now().Add(time.Second * 3)
+	for {
+		if time.Now().After(timeout) {
+			break
+		}
+		if timestamp != node.NMTMaster.Timestamp {
+			break
+		}
 	}
 	status := node.NMTMaster.GetStateString()
 	return &status, nil
@@ -91,7 +101,7 @@ func (c *CanOpenUC) FlashNode(id int, flashFile []byte) error {
 			log.Debug().Str("Function", "FlashNode").Msgf("PROGRAM_CONTROL_CLEAR failed: %v", err)
 			return
 		}
-		err = node.SDOClient.Write(PROGRAM_DATA, 1, true, flashFile)
+		err = node.SDOClient.Write(PROGRAM_DATA, 1, false, flashFile)
 		if err != nil {
 			log.Debug().Str("Function", "FlashNode").Msgf("PROGRAM_DATA failed: %v", err)
 			return

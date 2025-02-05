@@ -4,7 +4,7 @@ import (
 	can "github.com/angelodlfrtr/go-can"
 	transports "github.com/angelodlfrtr/go-can/transports"
 	"github.com/jaster-prj/canopenrest/external/persistence"
-	canopen "github.com/jormenjanssen/go-canopen"
+	canopen "github.com/jaster-prj/go-canopen"
 )
 
 type CanOpenUCConfig struct {

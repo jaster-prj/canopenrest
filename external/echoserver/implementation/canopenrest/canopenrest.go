@@ -96,7 +96,6 @@ func (h *Handler) GetNMT(ctx echo.Context, params apicanopenrest.GetNMTParams) e
 		http.StatusOK,
 		*status,
 	)
-
 }
 
 // PostNMT handles the POST request for the NMT

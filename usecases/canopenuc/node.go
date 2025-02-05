@@ -1,7 +1,7 @@
 package canopenuc
 
 import (
-	canopen "github.com/jormenjanssen/go-canopen"
+	canopen "github.com/jaster-prj/go-canopen"
 )
 
 type NodeConfig struct {

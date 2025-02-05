@@ -18,7 +18,9 @@ RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 1777 "$GOPATH"
 WORKDIR $GOPATH
 RUN go install -v golang.org/x/tools/gopls@latest \
 	&& go install github.com/go-delve/delve/cmd/dlv@latest \
-	&& go install honnef.co/go/tools/cmd/staticcheck@latest
+	&& go install honnef.co/go/tools/cmd/staticcheck@latest \
+	&& go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest \
+	&& go install gotest.tools/gotestsum@latest
 
 FROM base AS dev
 

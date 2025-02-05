@@ -46,8 +46,8 @@ func (f *Filestorage) SafeNode(id int, odsFile []byte) error {
 	} else if err != nil {
 		return err
 	}
-
-	file, err := os.OpenFile("objdict.eds", os.O_CREATE|os.O_WRONLY, 0644)
+	nodeFile := path.Join(nodeDir, "objdict.eds")
+	file, err := os.OpenFile(nodeFile, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,8 @@ func (f *Filestorage) GetObjDict(id int) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-	file, err := os.Open("objdict.eds")
+	nodeFile := path.Join(nodeDir, "objdict.eds")
+	file, err := os.Open(nodeFile)
 	if err != nil {
 		return []byte{}, err
 	}

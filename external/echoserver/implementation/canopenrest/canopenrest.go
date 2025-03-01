@@ -2,9 +2,12 @@ package canopenrest
 
 import (
 	"bytes"
-	"encoding/base64"
+	"encoding/hex"
+	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"path"
 	"strconv"
 	"strings"
 
@@ -146,8 +149,8 @@ func (h *Handler) GetSDO(ctx echo.Context, params apicanopenrest.GetSDOParams) e
 		reader := bytes.NewBuffer(bytesSDO)
 		return ctx.Stream(http.StatusOK, "application/octet-stream", reader)
 	case strings.Contains(accept, "text/plain"):
-		responseStr := base64.StdEncoding.EncodeToString(bytesSDO)
-		return ctx.String(http.StatusOK, responseStr)
+		responseStr := fmt.Sprintf("%X", bytesSDO)
+		return ctx.String(http.StatusOK, addSpacerToHex(responseStr, ":"))
 	default:
 		log.Error().Msgf("switch to default: %s", accept)
 		return ctx.NoContent(http.StatusBadRequest)
@@ -168,12 +171,13 @@ func (h *Handler) PostSDO(ctx echo.Context, params apicanopenrest.PostSDOParams)
 			return ctx.NoContent(http.StatusBadRequest)
 		}
 	case strings.Contains(content, "text/plain"):
-		encodedBytes, err := io.ReadAll(ctx.Request().Body)
+		requestBytes, err := io.ReadAll(ctx.Request().Body)
 		if err != nil {
 			log.Error().Msg(err.Error())
 			return ctx.NoContent(http.StatusBadRequest)
 		}
-		bytesSDO, err = base64.StdEncoding.DecodeString(string(encodedBytes))
+		request := strings.ReplaceAll(string(requestBytes), ":", "")
+		bytesSDO, err = hex.DecodeString(request)
 		if err != nil {
 			log.Error().Msg(err.Error())
 			return ctx.NoContent(http.StatusBadRequest)
@@ -224,17 +228,36 @@ func (h *Handler) PostNode(ctx echo.Context, params apicanopenrest.PostNodeParam
 }
 
 func (h *Handler) PostFlash(ctx echo.Context, params apicanopenrest.PostFlashParams) error {
-	flashFile, err := io.ReadAll(ctx.Request().Body)
+	basePath := os.Getenv("CANOPEN_STORAGE")
+	var err error
+	if basePath == "" {
+		basePath, err = os.UserConfigDir()
+		if err != nil {
+			return err
+		}
+	}
+	out, err := os.Create(path.Join(basePath, "CanOpenRest", "flashfile.bin"))
 	if err != nil {
-		log.Error().Msg(err.Error())
-		return ctx.NoContent(http.StatusBadRequest)
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, ctx.Request().Body)
+	if err != nil {
+		return err
+	}
+	out.Close()
+	flashFile, err := os.ReadFile(path.Join(basePath, "CanOpenRest", "flashfile.bin"))
+	if err != nil {
+		return err
 	}
 	id, err := h.getIntFromHex(params.Node)
 	if err != nil {
 		log.Error().Msg(err.Error())
 		return ctx.NoContent(http.StatusBadRequest)
 	}
-	err = h.canopenUC.FlashNode(int(id), flashFile)
+	log.Debug().Msgf("flashFile size: %d", len(flashFile))
+	err = h.canopenUC.FlashNode(int(id), flashFile, params.Version)
 	if err != nil {
 		log.Error().Msg(err.Error())
 		return ctx.NoContent(http.StatusBadRequest)
@@ -245,4 +268,15 @@ func (h *Handler) PostFlash(ctx echo.Context, params apicanopenrest.PostFlashPar
 func (h *Handler) getIntFromHex(hexStr string) (int64, error) {
 	numberStr := strings.Replace(hexStr, "0x", "", -1)
 	return strconv.ParseInt(numberStr, 16, 64)
+}
+
+func addSpacerToHex(hexString string, spacer string) string {
+	var result strings.Builder
+	for i := 0; i < len(hexString); i += 2 {
+		if i > 0 {
+			result.WriteString(spacer)
+		}
+		result.WriteString(hexString[i : i+2])
+	}
+	return result.String()
 }

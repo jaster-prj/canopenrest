@@ -1,9 +1,9 @@
 package canopenuc
 
 import (
-	can "github.com/angelodlfrtr/go-can"
-	transports "github.com/angelodlfrtr/go-can/transports"
 	"github.com/jaster-prj/canopenrest/external/persistence"
+	can "github.com/jaster-prj/go-can"
+	transports "github.com/jaster-prj/go-can/transports"
 	canopen "github.com/jaster-prj/go-canopen"
 )
 

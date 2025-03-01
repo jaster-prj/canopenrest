@@ -9,10 +9,11 @@ import (
 )
 
 const (
-	PROGRAM_DATA           = 8016
-	PROGRAM_CONTROL        = 8017
-	PROGRAM_SOFTWARE_IDENT = 8022
-	FLASH_STATUS_IDENT     = 8023
+	MANUFACTURER_SOFTWARE_VERSION = 4106 //0x100A
+	PROGRAM_DATA                  = 8016 //0x1F50
+	PROGRAM_CONTROL               = 8017 //0x1F51
+	PROGRAM_SOFTWARE_IDENT        = 8022
+	FLASH_STATUS_IDENT            = 8023
 )
 
 type ProgramControlState int
@@ -63,7 +64,7 @@ func (c *CanOpenUC) ReadSDO(id int, index uint16, subindex uint8) ([]byte, error
 	}
 	data, err := node.SDOClient.Read(index, subindex)
 	if err == nil {
-		log.Debug().Str("Function", "WriteSDO").Msgf("data: %v", data)
+		log.Debug().Str("Function", "ReadSDO").Msgf("data: %v", data)
 	}
 	return data, err
 }
@@ -85,7 +86,7 @@ func (c *CanOpenUC) CreateNode(id int, edsFile []byte) error {
 	return err
 }
 
-func (c *CanOpenUC) FlashNode(id int, flashFile []byte) error {
+func (c *CanOpenUC) FlashNode(id int, flashFile []byte, version *string) error {
 	node, err := c.getNode(id)
 	if err != nil {
 		return err
@@ -108,7 +109,7 @@ func (c *CanOpenUC) FlashNode(id int, flashFile []byte) error {
 		}
 		flashStatus, err := node.SDOClient.Read(FLASH_STATUS_IDENT, 1)
 		if err != nil {
-			log.Debug().Str("Function", "FlashNode").Msgf("PROGRAM_DATA failed: %v", err)
+			log.Debug().Str("Function", "FlashNode").Msgf("Read FLASH_STATUS_IDENT failed: %v", err)
 			return
 		}
 		if int(flashStatus[0]) != 0 {
@@ -126,6 +127,22 @@ func (c *CanOpenUC) FlashNode(id int, flashFile []byte) error {
 			log.Debug().Str("Function", "FlashNode").Msgf("PROGRAM_CONTROL_START failed: %v", err)
 			return
 		}
+		response, err := node.SDOClient.Read(MANUFACTURER_SOFTWARE_VERSION, 0)
+		if err != nil {
+			log.Debug().Str("Function", "FlashNode").Msgf("Read MANUFACTURER_SOFTWARE_VERSION failed: %v", err)
+			return
+		}
+		log.Debug().Str("Function", "FlashNode").Msgf("New Version: %s", string(response))
+		if version != nil {
+			if string(response) == *version {
+				err = node.SDOClient.Write(PROGRAM_CONTROL, 1, false, []byte{byte(PROGRAM_CONTROL_ACK)})
+				if err != nil {
+					log.Debug().Str("Function", "FlashNode").Msgf("PROGRAM_CONTROL_ACK failed: %v", err)
+					return
+				}
+			}
+		}
+
 		log.Debug().Str("Function", "FlashNode").Msgf("Flash Success")
 	}()
 	return nil

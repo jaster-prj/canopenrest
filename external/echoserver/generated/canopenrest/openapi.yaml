@@ -11,7 +11,9 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: 0.1.0
 servers:
+  - url: https://cangateway.ll-tj-home/canopenrest/api/v1
   - url: https://localhost/canopenrest/api/v1
+  - url: http://cangateway.ll-tj-home:8080/canopenrest/api/v1
   - url: http://localhost:8080/canopenrest/api/v1
 paths:
   /nmt:
@@ -182,6 +184,12 @@ paths:
           in: query
           description: Node to query
           required: true
+          schema:
+            type: string
+        - name: version
+          in: query
+          description: Version that will be flashed
+          required: false
           schema:
             type: string
       requestBody:

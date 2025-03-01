@@ -7,5 +7,5 @@ type ICanopenRest interface {
 	ReadSDO(node int, index uint16, subindex uint8) ([]byte, error)
 	WriteSDO(node int, index uint16, subindex uint8, data []byte) error
 	CreateNode(id int, edsFile []byte) error
-	FlashNode(id int, flashFile []byte) error
+	FlashNode(id int, flashFile []byte, version *string) error
 }

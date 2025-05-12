@@ -1,6 +1,9 @@
 package canopenuc
 
 import (
+	"sync"
+
+	"github.com/jaster-prj/canopenrest/entities"
 	"github.com/jaster-prj/canopenrest/external/persistence"
 	can "github.com/jaster-prj/go-can"
 	transports "github.com/jaster-prj/go-can/transports"
@@ -32,11 +35,15 @@ func (cc *CanOpenUCConfig) CreateCanOpenUC() (*CanOpenUC, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &CanOpenUC{
+	canopenUc := &CanOpenUC{
+		mu:          sync.Mutex{},
+		flashOrders: make(chan entities.FlashOrder, 20),
 		persistence: cc.Persistence,
 		network:     network,
 		nodes:       map[int]*canopen.Node{},
-	}, nil
+	}
+	canopenUc.RunFlashTask()
+	return canopenUc, nil
 }
 
 func NewCanOpenUC(canPort string) (*CanOpenUC, error) {

@@ -11,10 +11,11 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: 0.1.0
 servers:
-  - url: https://cangateway.ll-tj-home/canopenrest/api/v1
-  - url: https://localhost/canopenrest/api/v1
-  - url: http://cangateway.ll-tj-home:8080/canopenrest/api/v1
-  - url: http://localhost:8080/canopenrest/api/v1
+  - url: /canopenrest/api/v1
+  - url: "{url}"
+    variables:
+      url:
+        default: http://localhost/canopenrest/api/v1
 paths:
   /nmt:
     get:
@@ -199,7 +200,48 @@ paths:
               type: string
               format: binary
       responses:
-        '200':
-          description: Successful operation
+        '201':
+          description: Create FlashOrder
+          content:
+            text/plain:
+              schema:
+                type: string
         '400':
           description: Invalid input
+    get:
+      tags:
+        - flash
+      summary: Gets information from FlashOrder
+      description: Gets information from FlashOrder
+      operationId: getFlash
+      parameters:
+        - name: id
+          in: query
+          description: uuid of TestOrder
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Get FlashState
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  requested:
+                    type: string
+                    format: date-time
+                  start: 
+                    type: string
+                    format: date-time
+                  finish:
+                    type: string
+                    format: date-time
+                  state:
+                    type: string
+                  error:
+                    type: string
+        '400':
+          description: Invalid input
+      

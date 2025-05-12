@@ -10,7 +10,10 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/google/uuid"
+	"github.com/jaster-prj/canopenrest/entities"
 	apicanopenrest "github.com/jaster-prj/canopenrest/external/echoserver/generated/canopenrest"
 	"github.com/jaster-prj/canopenrest/external/echoserver/implementation"
 
@@ -19,6 +22,14 @@ import (
 	"github.com/labstack/echo/v4"
 	middleware "github.com/oapi-codegen/echo-middleware"
 )
+
+type FlashOrderState struct {
+	Requested time.Time           `json:"requested"`
+	Start     *time.Time          `json:"start,omitempty"`
+	Finish    *time.Time          `json:"finish,omitempty"`
+	State     entities.FlashState `json:"state"`
+	Error     *string             `json:"error,omitempty"`
+}
 
 // EndpointRegisterer handle Registration of jobs Endpoint to the echo server
 type EndpointRegisterer struct {
@@ -257,12 +268,32 @@ func (h *Handler) PostFlash(ctx echo.Context, params apicanopenrest.PostFlashPar
 		return ctx.NoContent(http.StatusBadRequest)
 	}
 	log.Debug().Msgf("flashFile size: %d", len(flashFile))
-	err = h.canopenUC.FlashNode(int(id), flashFile, params.Version)
+	order, err := h.canopenUC.FlashNode(int(id), flashFile, params.Version)
 	if err != nil {
 		log.Error().Msg(err.Error())
 		return ctx.NoContent(http.StatusBadRequest)
 	}
-	return ctx.NoContent(http.StatusOK)
+	return ctx.String(http.StatusCreated, order.String())
+}
+
+func (h *Handler) GetFlash(ctx echo.Context, params apicanopenrest.GetFlashParams) error {
+	testOrderId, err := uuid.Parse(params.Id)
+	if err != nil {
+		log.Error().Msg(err.Error())
+		return ctx.NoContent(http.StatusBadRequest)
+	}
+	flashStates, err := h.canopenUC.GetFlashState(testOrderId)
+	if err != nil {
+		log.Error().Msg(err.Error())
+		return ctx.NoContent(http.StatusBadRequest)
+	}
+	return ctx.JSON(http.StatusOK, &FlashOrderState{
+		Requested: flashStates.Requested,
+		Start:     flashStates.Start,
+		Finish:    flashStates.Finish,
+		State:     flashStates.State,
+		Error:     flashStates.Error,
+	})
 }
 
 func (h *Handler) getIntFromHex(hexStr string) (int64, error) {

@@ -2,6 +2,8 @@ cat /etc/systemd/system/canopenrest.service
 
 [Unit]
 Description=CanOpenRest
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Environment="CANOPEN_STORAGE=/var/cache"

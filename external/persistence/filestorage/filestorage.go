@@ -189,7 +189,7 @@ func (f *Filestorage) SetFlashState(id uuid.UUID, state entities.FlashState, err
 	}
 	flash.State = state
 	if errState != nil {
-		flash.Error = new(fmt.Sprintf("%w", *errState))
+		flash.Error = new((*errState).Error())
 	}
 	data, err := yaml.Marshal(flash)
 	if err != nil {

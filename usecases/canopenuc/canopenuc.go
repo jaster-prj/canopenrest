@@ -41,14 +41,8 @@ type CanOpenUC struct {
 
 func (c *CanOpenUC) RunFlashTask() {
 	go func() {
-		for {
-			select {
-			case flashOrder, ok := <-c.flashOrders:
-				if !ok {
-					break
-				}
-				c.flashNode(flashOrder)
-			}
+		for flashOrder := range c.flashOrders {
+			c.flashNode(flashOrder)
 		}
 	}()
 }
@@ -155,43 +149,43 @@ func (c *CanOpenUC) flashNode(flashOrder entities.FlashOrder) {
 	c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashPreOperational, nil)
 	err = node.NMTMaster.SetState("PRE-OPERATIONAL")
 	if err != nil {
-		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("Set PRE-OPERATIONAL failed: %v", err)))
+		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("set PRE-OPERATIONAL failed: %w", err)))
 		return
 	}
 	c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramStopBefore, nil)
 	err = node.SDOClient.Write(PROGRAM_CONTROL, 1, false, []byte{byte(PROGRAM_CONTROL_STOP)})
 	if err != nil {
-		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("PROGRAM_CONTROL_STOP failed: %v", err)))
+		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("set PROGRAM_CONTROL_STOP failed: %w", err)))
 		return
 	}
 	c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramClear, nil)
 	err = node.SDOClient.Write(PROGRAM_CONTROL, 1, false, []byte{byte(PROGRAM_CONTROL_CLEAR)})
 	if err != nil {
-		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("PROGRAM_CONTROL_CLEAR failed: %v", err)))
+		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("set PROGRAM_CONTROL_CLEAR failed: %w", err)))
 		return
 	}
 	c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramWriteData, nil)
 	err = node.SDOClient.Write(PROGRAM_DATA, 1, false, flashOrder.FlashFile)
 	if err != nil {
-		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("PROGRAM_DATA failed: %v", err)))
+		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("set PROGRAM_DATA failed: %w", err)))
 		return
 	}
 	c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramWriteFinish, nil)
 	flashStatus, err := node.SDOClient.Read(FLASH_STATUS_IDENT, 1)
 	if err != nil {
-		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("Read FLASH_STATUS_IDENT failed: %v", err)))
+		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("read FLASH_STATUS_IDENT failed: %w", err)))
 		node.NMTMaster.SetState("RESET")
 		return
 	}
 	if int(flashStatus[0]) != 0 {
-		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("FlashStatus failed: %d", int(flashStatus[0]))))
+		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("set FlashStatus failed: %d", int(flashStatus[0]))))
 		node.NMTMaster.SetState("RESET")
 		return
 	}
 	c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramStopAfter, nil)
 	err = node.SDOClient.Write(PROGRAM_CONTROL, 1, false, []byte{byte(PROGRAM_CONTROL_STOP)})
 	if err != nil {
-		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("PROGRAM_CONTROL_STOP2 failed: %v", err)))
+		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("set PROGRAM_CONTROL_STOP2 failed: %w", err)))
 		node.NMTMaster.SetState("RESET")
 		return
 	}
@@ -199,7 +193,7 @@ func (c *CanOpenUC) flashNode(flashOrder entities.FlashOrder) {
 	c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramStart, nil)
 	err = node.SDOClient.Write(PROGRAM_CONTROL, 1, false, []byte{byte(PROGRAM_CONTROL_START)})
 	if err != nil {
-		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("PROGRAM_CONTROL_START failed: %v", err)))
+		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("set PROGRAM_CONTROL_START failed: %w", err)))
 		node.NMTMaster.SetState("RESET")
 		return
 	}
@@ -207,19 +201,19 @@ func (c *CanOpenUC) flashNode(flashOrder entities.FlashOrder) {
 	c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramCheckError, nil)
 	response, err := node.SDOClient.Read(ERROR_REGISTER, 0)
 	if err != nil {
-		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("Read ERROR_REGISTER failed: %v", err)))
+		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("read ERROR_REGISTER failed: %w", err)))
 		node.NMTMaster.SetState("RESET")
 		return
 	}
 	if response[0] != 0 {
-		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("Read ERROR_REGISTER not 0: %d", response[0])))
+		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("read ERROR_REGISTER not 0: %d", response[0])))
 		node.NMTMaster.SetState("RESET")
 		return
 	}
 	c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramCheckVersion, nil)
 	response, err = node.SDOClient.Read(MANUFACTURER_SOFTWARE_VERSION, 0)
 	if err != nil {
-		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("Read MANUFACTURER_SOFTWARE_VERSION failed: %v", err)))
+		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("read MANUFACTURER_SOFTWARE_VERSION failed: %w", err)))
 		node.NMTMaster.SetState("RESET")
 		return
 	}
@@ -229,7 +223,7 @@ func (c *CanOpenUC) flashNode(flashOrder entities.FlashOrder) {
 		if string(response) == *flashOrder.Version {
 			err = node.SDOClient.Write(PROGRAM_CONTROL, 1, false, []byte{byte(PROGRAM_CONTROL_ACK)})
 			if err != nil {
-				c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("PROGRAM_CONTROL_ACK failed: %v", err)))
+				c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("set PROGRAM_CONTROL_ACK failed: %w", err)))
 				node.NMTMaster.SetState("RESET")
 				return
 			}

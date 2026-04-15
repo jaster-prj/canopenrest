@@ -51,7 +51,7 @@ func NewService(echoServer *echo.Echo, regs []IRegisterer) *Service {
 func (s *Service) WithLogger() *Service {
 	// Log all requests
 	for _, endpointGroup := range s.endpointGroups {
-		endpointGroup.group.Use(echomiddleware.Logger())
+		endpointGroup.group.Use(echomiddleware.RequestLogger())
 	}
 	return s
 }

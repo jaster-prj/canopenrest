@@ -1,0 +1,15 @@
+name: go - ci/cd stable
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  SERVICE: canopenrest
+
+
+jobs:
+
+  ci:
+    uses: ./.github/workflows/ci.yml

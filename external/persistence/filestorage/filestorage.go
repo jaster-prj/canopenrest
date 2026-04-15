@@ -1,6 +1,7 @@
 package filestorage
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -12,7 +13,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jaster-prj/canopenrest/common"
 	"github.com/jaster-prj/canopenrest/entities"
 	"github.com/jaster-prj/canopenrest/external/persistence"
 	"gopkg.in/yaml.v3"
@@ -57,15 +57,20 @@ func (f *Filestorage) SafeNode(id int, odsFile []byte) error {
 		return err
 	}
 	nodeFile := path.Join(nodeDir, "objdict.eds")
-	file, err := os.OpenFile(nodeFile, os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(nodeFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	// Write the bytes to the file
-	if _, err := file.Write(odsFile); err != nil {
+	writer := bufio.NewWriter(file)
+
+	if _, err = writer.Write(odsFile); err != nil {
 		return err
+	}
+	err = writer.Flush()
+	if err != nil {
+		return fmt.Errorf("flush file failed: %w", err)
 	}
 	return nil
 }
@@ -176,15 +181,15 @@ func (f *Filestorage) SetFlashState(id uuid.UUID, state entities.FlashState, err
 	case entities.FlashRequested:
 		flash.Requested = time.Now()
 	case entities.FlashProgramStopBefore:
-		flash.Start = common.POINTER(time.Now())
+		flash.Start = new(time.Now())
 	case entities.FlashProgramFinish:
-		flash.Finish = common.POINTER(time.Now())
+		flash.Finish = new(time.Now())
 	case entities.FlashProgramError:
-		flash.Finish = common.POINTER(time.Now())
+		flash.Finish = new(time.Now())
 	}
 	flash.State = state
 	if errState != nil {
-		flash.Error = common.POINTER(fmt.Sprintf("%w", *errState))
+		flash.Error = new(fmt.Sprintf("%w", *errState))
 	}
 	data, err := yaml.Marshal(flash)
 	if err != nil {

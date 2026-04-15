@@ -50,7 +50,7 @@ jobs:
         path: bin/${{ env.SERVICE }}
         retention-days: 5
 
-      name: Test Report
+    - name: Test Report
       uses: dorny/test-reporter@v3
       with:
         name: go tests

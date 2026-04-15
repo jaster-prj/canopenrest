@@ -1,0 +1,107 @@
+name: go ci
+
+env:
+  SERVICE: canopenrest
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v6
+
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version-file: go.mod
+
+    - name: Setup gotestsum
+      run: |
+        go install gotest.tools/gotestsum@latest
+
+    - name: Get dependencies
+      run: |
+        go get -v -t -d
+
+    - name: Test
+      run: |
+        gotestsum --format testname --junitfile report.xml ./...
+
+    - name: Publish test results
+      uses: actions/upload-artifact@v7
+      with:
+        name: test-results
+        path: report.xml
+
+    - name: Build
+      run: |
+        go build -trimpath -ldflags="-s -w" -o bin/${{ env.SERVICE }} ./cmd
+
+    - name: Upload service for job sharing
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.SERVICE }}
+        path: bin/${{ env.SERVICE }}
+        retention-days: 5
+
+      name: Test Report
+      uses: dorny/test-reporter@v3
+      with:
+        name: go tests
+        path: report.xml
+        reporter: java-junit
+
+  check:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v6
+
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version-file: go.mod
+
+    - name: Static-Check
+      run: |
+        go install honnef.co/go/tools/cmd/staticcheck@latest
+        staticcheck ./...
+
+    - name: Dependency-Update-Check
+      if: github.ref != 'refs/heads/main'
+      run: |
+        go get -u ./...
+        go mod tidy
+        if git diff --quiet -- go.mod go.sum
+        then
+            echo Project dependencies are up to date.
+        else
+            echo Project dependencies are outdatet.
+            echo Run \'go get -u ./... && go mod tidy\' to update project dependecies.
+            exit 1
+        fi
+
+    - name: Misspell-Check
+      run: |
+        go install github.com/client9/misspell/cmd/misspell@latest
+        find . -type f -name '*.go' | xargs misspell -error
+
+    - name: Vulnerability-Check
+      if: github.ref != 'refs/heads/main'
+      run: |
+        go install golang.org/x/vuln/cmd/govulncheck@latest
+        govulncheck ./...
+
+    - name: Install go-licenses
+      run: go install github.com/google/go-licenses@latest
+
+    - name: Check Licenses
+      run: |
+        go-licenses check ./cmd/... --skip_headers --allowed_licenses="$(paste -sd, license_whitelist)"

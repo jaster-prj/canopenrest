@@ -1,0 +1,39 @@
+name: go - ci/cd release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-dev.[0-9]+'
+
+env:
+  SERVICE: canopenrest
+
+jobs:
+  release-binaries:
+    name: release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, darwin]
+        goarch: [amd64, arm64, arm]
+        exclude:
+          - goos: darwin
+            goarch: arm
+    steps:
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v6
+
+    - uses: wangyoucao577/go-release-action@v1.49
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        goversion: 1.26
+        binary_name: canopenrest
+        compress_assets: false
+        ldflags: -X "main.version=${{ github.ref_name }}"
+      env:
+        CGO_ENABLED: 0

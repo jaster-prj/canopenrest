@@ -1,0 +1,6 @@
+package: canopenrest
+generate:
+  echo-server: true
+  models: true
+  embedded-spec: true
+output: canopenrest.go

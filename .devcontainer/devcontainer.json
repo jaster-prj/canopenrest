@@ -1,14 +1,18 @@
 {
   "name": "CANOPENREST",
-  "image": "devcontainer-go-dev:latest",
+  "image": "ghcr.io/jaster-prj/devcontainer-go-base:latest",
   "runArgs": [
-    "--name=CANOPENREST_Devcontainer"
+    "--name",
+    "CANOPENREST_Devcontainer"
   ],
   "customizations": {
     // Configure properties specific to VS Code.
     "vscode": {
       // Add the IDs of extensions you want installed when the container is created.
-      "extensions": ["golang.Go"],
+      "extensions": [
+        "golang.Go",
+        "stkb.rewrap"
+      ],
       "settings": {
 				"extensions.verifySignature": false
 			}

@@ -9,7 +9,7 @@ info:
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
-  version: 0.1.0
+  version: 0.1.1
 servers:
   - url: /canopenrest/api/v1
   - url: "{url}"
@@ -36,7 +36,7 @@ paths:
         '200':
           description: successful operation
           content:
-            application/json:
+            text/plain:
               schema:
                 type: string
         '400':
@@ -57,9 +57,18 @@ paths:
             pattern: '^(0[x])?[A-F0-9]+$'
       requestBody:
         content:
-          application/json:
+          text/plain:
             schema:
               type: string
+              enum:
+                - OPERATIONAL
+                - STOPPED
+                - SLEEP
+                - STANDBY
+                - PRE-OPERATIONAL
+                - INITIALISING
+                - RESET
+                - RESET COMMUNICATION
       responses:
         '200':
           description: successful operation
@@ -97,13 +106,13 @@ paths:
         '200':
           description: successful operation
           content:
+            text/plain:
+              schema:
+                type: string
             application/octet-stream:
               schema:
                 type: string
                 format: binary
-            text/plain:
-              schema:
-                type: string
         '400':
           description: Invalid tag value
     post:
@@ -135,13 +144,13 @@ paths:
             type: integer
       requestBody:
         content:
+          text/plain:
+            schema:
+              type: string
           application/octet-stream:
             schema:
               type: string
               format: binary
-          text/plain:
-            schema:
-              type: string
       responses:
         '200':
           description: Successful operation

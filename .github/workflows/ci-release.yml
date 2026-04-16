@@ -16,11 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        goos: [linux, darwin]
+        goos: [linux, windows]
         goarch: [amd64, arm64, arm]
-        exclude:
-          - goos: darwin
-            goarch: arm
     steps:
 
     - name: Check out code into the Go module directory
@@ -32,7 +29,7 @@ jobs:
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
         goversion: 1.26
-        binary_name: canopenrest
+        binary_name: canopenrest_${{ matrix.goos }}_${{ matrix.goarch }}
         compress_assets: false
         ldflags: -X "main.version=${{ github.ref_name }}"
       env:

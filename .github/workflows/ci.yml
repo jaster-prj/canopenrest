@@ -16,6 +16,9 @@ jobs:
       matrix:
         goos: [linux, windows]
         goarch: [amd64, arm64, arm]
+        exclude:
+          - goos: windows
+            goarch: arm
     steps:
 
     - name: Check out code into the Go module directory

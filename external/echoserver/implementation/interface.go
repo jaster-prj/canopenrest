@@ -12,6 +12,6 @@ type ICanopenRest interface {
 	ReadSDO(node int, index uint16, subindex uint8) ([]byte, error)
 	WriteSDO(node int, index uint16, subindex uint8, data []byte) error
 	CreateNode(id int, edsFile []byte) error
-	FlashNode(id int, flashFile []byte, version *string) (*uuid.UUID, error)
+	FlashNode(id int, flashFile []byte, version *string, check *bool) (*uuid.UUID, error)
 	GetFlashState(id uuid.UUID) (*entities.FlashOrderState, error)
 }

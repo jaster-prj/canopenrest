@@ -202,6 +202,12 @@ paths:
           required: false
           schema:
             type: string
+        - name: check
+          in: query
+          description: Check error after flash
+          required: false
+          schema:
+            type: boolean
       requestBody:
         content:
           application/octet-stream:

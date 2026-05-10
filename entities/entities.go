@@ -11,6 +11,7 @@ type FlashOrder struct {
 	Id           int
 	FlashFile    []byte
 	Version      *string
+	Check        *bool
 }
 
 type FlashOrderState struct {

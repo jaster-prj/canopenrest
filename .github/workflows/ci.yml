@@ -16,9 +16,17 @@ jobs:
       matrix:
         goos: [linux, windows]
         goarch: [amd64, arm64, arm]
+        goarm: [""] # Only relevant for arm architecture
         exclude:
           - goos: windows
             goarch: arm
+        include:
+          - goos: linux
+            goarch: arm
+            goarm: "6"
+          - goos: linux
+            goarch: arm
+            goarm: "7"
     steps:
 
     - name: Check out code into the Go module directory
@@ -37,14 +45,15 @@ jobs:
       env:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
+        GOARM: ${{ matrix.goarm }}
       run: |
-        go build -trimpath -ldflags="-s -w" -o bin/${{ env.SERVICE }}_${{ matrix.goos }}_${{ matrix.goarch }} ./cmd
+        go build -trimpath -ldflags="-s -w" -o bin/${{ env.SERVICE }}_${{ matrix.goos }}_${{ matrix.goarch }}${{ matrix.goarm }} ./cmd
 
     - name: Upload service for job sharing
       uses: actions/upload-artifact@v7
       with:
-        name: ${{ env.SERVICE }}_${{ matrix.goos }}_${{ matrix.goarch }}
-        path: bin/${{ env.SERVICE }}_${{ matrix.goos }}_${{ matrix.goarch }}
+        name: ${{ env.SERVICE }}_${{ matrix.goos }}_${{ matrix.goarch }}${{ matrix.goarm }}
+        path: bin/${{ env.SERVICE }}_${{ matrix.goos }}_${{ matrix.goarch }}${{ matrix.goarm }}
         retention-days: 5
 
   check:

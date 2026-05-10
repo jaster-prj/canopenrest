@@ -18,9 +18,17 @@ jobs:
       matrix:
         goos: [linux, windows]
         goarch: [amd64, arm64, arm]
+        goarm: [""] # Only relevant for arm architecture
         exclude:
           - goos: windows
             goarch: arm
+        include:
+          - goos: linux
+            goarch: arm
+            goarm: "6"
+          - goos: linux
+            goarch: arm
+            goarm: "7"
     steps:
 
     - name: Check out code into the Go module directory
@@ -31,8 +39,9 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
+        goarm: ${{ matrix.goarm }}
         goversion: 1.26
-        binary_name: canopenrest_${{ matrix.goos }}_${{ matrix.goarch }}
+        binary_name: canopenrest
         compress_assets: false
         ldflags: -X "main.version=${{ github.ref_name }}"
       env:

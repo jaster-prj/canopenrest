@@ -10,12 +10,15 @@
     "vscode": {
       // Add the IDs of extensions you want installed when the container is created.
       "extensions": [
-        "golang.Go",
-        "stkb.rewrap"
+        "golang.Go"
       ],
       "settings": {
-				"extensions.verifySignature": false
-			}
+        "extensions.verifySignature": false,
+        "go.formatTool": "custom",
+        "go.alternateTools": {
+          "customFormatter": "golines"
+        }
+      }
     }
   }
 }

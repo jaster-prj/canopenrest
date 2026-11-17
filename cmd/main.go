@@ -16,8 +16,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const canPort string = "can0"
-
 func main() {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 

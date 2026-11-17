@@ -40,8 +40,8 @@ jobs:
         goos: ${{ matrix.goos }}
         goarch: ${{ matrix.goarch }}
         goarm: ${{ matrix.goarm }}
-        goversion: 1.26
-        binary_name: canopenrest
+        goversion: 1.27.4
+        binary_name: canopenrest_${{ matrix.goos }}_${{ matrix.goarch }}
         compress_assets: false
         ldflags: -X "main.version=${{ github.ref_name }}"
       env:

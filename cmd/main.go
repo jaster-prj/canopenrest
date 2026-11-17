@@ -16,8 +16,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const canPort string = "can0"
-
 func main() {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
@@ -25,11 +23,22 @@ func main() {
 	if err != nil {
 		log.Fatal().Msg(err.Error())
 	}
-	canOpenUCConfig := canopenuc.CanOpenUCConfig{
-		Persistence: fileStorage,
-		CanPort:     canPort,
+	var canOpenUC *canopenuc.CanOpenUC
+	if os.Getenv("CAN_TRANSPORT") == "udp" {
+		host := envOrDefault("CAN_UDP_HOST", "127.0.0.1")
+		port := envOrDefault("CAN_UDP_PORT", "46100")
+		canOpenUC, err = canopenuc.NewCanOpenUCWithUDP(
+			fileStorage,
+			fmt.Sprintf("%s:%s", host, port),
+			os.Getenv("CAN_UDP_LISTEN"),
+		)
+	} else {
+		canOpenUCConfig := canopenuc.CanOpenUCConfig{
+			Persistence: fileStorage,
+			CanPort:     envOrDefault("CAN_PORT", "can0"),
+		}
+		canOpenUC, err = canOpenUCConfig.CreateCanOpenUC()
 	}
-	canOpenUC, err := canOpenUCConfig.CreateCanOpenUC()
 	if err != nil {
 		log.Fatal().Msg(err.Error())
 	}
@@ -69,4 +78,11 @@ func main() {
 		port := 443
 		log.Fatal().Msg(echoServer.StartTLS(fmt.Sprintf(":%d", port), certPath, keyPath).Error())
 	}
+}
+
+func envOrDefault(name, fallback string) string {
+	if value := os.Getenv(name); value != "" {
+		return value
+	}
+	return fallback
 }

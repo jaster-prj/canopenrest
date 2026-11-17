@@ -61,7 +61,7 @@ func (er *EndpointRegisterer) RegisterEndpoint(router *echo.Group) {
 // Add Swagger-Endpoint to the given echo-server
 func (er *EndpointRegisterer) CreateSwagger(router *echo.Group) {
 	router.Add("GET", "", func(c echo.Context) error {
-		swagger, err := apicanopenrest.GetSwagger()
+		swagger, err := apicanopenrest.GetSpec()
 		if err != nil {
 			log.Error().Msgf("Failed to load swagger: %v", err)
 			return c.NoContent(http.StatusInternalServerError)
@@ -72,7 +72,7 @@ func (er *EndpointRegisterer) CreateSwagger(router *echo.Group) {
 
 // UseOpts can register optional function like authentification
 func (er *EndpointRegisterer) UseOpts(router *echo.Group, opts middleware.Options) {
-	swaggerDefinition, err := apicanopenrest.GetSwagger()
+	swaggerDefinition, err := apicanopenrest.GetSpec()
 	if err != nil {
 		log.Error().Str("middleware", "validator").Msg(err.Error())
 		return
@@ -268,7 +268,7 @@ func (h *Handler) PostFlash(ctx echo.Context, params apicanopenrest.PostFlashPar
 		return ctx.NoContent(http.StatusBadRequest)
 	}
 	log.Debug().Msgf("flashFile size: %d", len(flashFile))
-	order, err := h.canopenUC.FlashNode(int(id), flashFile, params.Version)
+	order, err := h.canopenUC.FlashNode(int(id), flashFile, params.Version, params.Check)
 	if err != nil {
 		log.Error().Msg(err.Error())
 		return ctx.NoContent(http.StatusBadRequest)

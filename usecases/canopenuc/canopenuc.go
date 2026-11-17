@@ -112,7 +112,7 @@ func (c *CanOpenUC) CreateNode(id int, edsFile []byte) error {
 	return err
 }
 
-func (c *CanOpenUC) FlashNode(id int, flashFile []byte, version *string) (*uuid.UUID, error) {
+func (c *CanOpenUC) FlashNode(id int, flashFile []byte, version *string, check *bool) (*uuid.UUID, error) {
 	order, err := uuid.NewUUID()
 	if err != nil {
 		return nil, err
@@ -122,6 +122,7 @@ func (c *CanOpenUC) FlashNode(id int, flashFile []byte, version *string) (*uuid.
 		Id:           id,
 		FlashFile:    flashFile,
 		Version:      version,
+		Check:        check,
 	}
 	log.Debug().Str("Function", "FlashNode").Msgf("SetFlashState %s", order.String())
 	err = c.persistence.SetFlashState(order, entities.FlashRequested, nil)
@@ -198,17 +199,20 @@ func (c *CanOpenUC) flashNode(flashOrder entities.FlashOrder) {
 		return
 	}
 	time.Sleep(time.Second * 10)
-	c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramCheckError, nil)
-	response, err := node.SDOClient.Read(ERROR_REGISTER, 0)
-	if err != nil {
-		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("read ERROR_REGISTER failed: %w", err)))
-		node.NMTMaster.SetState("RESET")
-		return
-	}
-	if response[0] != 0 {
-		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("read ERROR_REGISTER not 0: %d", response[0])))
-		node.NMTMaster.SetState("RESET")
-		return
+	var response []byte
+	if flashOrder.Check != nil && *flashOrder.Check {
+		c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramCheckError, nil)
+		response, err = node.SDOClient.Read(ERROR_REGISTER, 0)
+		if err != nil {
+			c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("read ERROR_REGISTER failed: %w", err)))
+			node.NMTMaster.SetState("RESET")
+			return
+		}
+		if response[0] != 0 {
+			c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramError, new(fmt.Errorf("read ERROR_REGISTER not 0: %d", response[0])))
+			node.NMTMaster.SetState("RESET")
+			return
+		}
 	}
 	c.persistence.SetFlashState(flashOrder.FlashOrderId, entities.FlashProgramCheckVersion, nil)
 	response, err = node.SDOClient.Read(MANUFACTURER_SOFTWARE_VERSION, 0)

@@ -96,7 +96,23 @@ jobs:
       if: github.ref != 'refs/heads/main'
       run: |
         go install golang.org/x/vuln/cmd/govulncheck@latest
-        govulncheck ./...
+        # GO-2026-6872 and GO-2026-6875 are fixed in Echo v4.16.3 according
+        # to the upstream advisories, but the Go vuln DB omits the v4 fixed
+        # version and consequently flags every Echo v4 release. Keep this
+        # guard so the exception cannot hide an Echo version before the fix.
+        echo_version="$(go list -m -f '{{.Version}}' github.com/labstack/echo/v4)"
+        test "$(printf '%s\n' v4.16.3 "$echo_version" | sort -V | head -n1)" = v4.16.3
+        govulncheck -format=json ./... > govulncheck.json
+        remaining="$(jq -sr '
+          [.[] | select(.finding != null and .finding.trace[0].function != null)
+           | .finding.osv]
+          | unique
+          | map(select(. != "GO-2026-6872" and . != "GO-2026-6875"))
+        ' govulncheck.json)"
+        if [ "$remaining" != "[]" ]; then
+          echo "Unallowlisted Go vulnerabilities found: $remaining"
+          exit 1
+        fi
 
     - name: Install go-licenses
       run: go install github.com/google/go-licenses@latest
